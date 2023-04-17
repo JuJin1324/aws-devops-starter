@@ -55,6 +55,13 @@
 >   discard-paths: yes
 > ```
 
+### 주의사항
+> AWS CodeBuild 에서 @SpringBootTest 를 이용하여 테스트를 시도할 경우 Exception 이 발생하는데,
+> AWS CodeBuild 시 사용되는 컴퓨팅 인스턴스가 인터넷에 연결되지 않아서 인듯 하다.  
+> 현재 나의 경우 AWS CodeBuild 에서는 테스트 자체를 빼고 테스트하도록 buildspec.yml 의 `phases.build.commands` 에
+> `./gradlew bootJar -x test -x asciidoctor` 를 통해서 모든 테스트 및 asciidoctor(Spring Rest Docs) 에 관련된 
+> task 를 모두 빼고 빌드를 실행하도록 설정하였다.  
+
 ### Jenkins 플러그인
 > TODO
 
