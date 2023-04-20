@@ -1,0 +1,22 @@
+version: 0.2
+phases:
+    build:
+        on-failure: ABORT
+        commands:
+            - echo Build Starting on `date`
+            - java -version
+            - chmod +x ./gradlew
+            - ./gradlew bootJar -Pprofile=stage -x test -x asciidoctor
+    post_build:
+        on-failure: ABORT
+        commands:
+            - echo $(basename ./build/libs/*.jar)
+            - echo $(basename ./build/scripts/*.sh)
+            - echo $(basename ./build/conf/*.conf)
+            - pwd
+artifacts:
+    files:
+        - build/libs/*.jar
+        - build/scripts/*.sh
+        - build/conf/*.conf
+    discard-paths: yes

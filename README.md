@@ -36,22 +36,41 @@
 > `컴퓨팅`: 소스코드 빌드에 맞는 스펙을 선택한다.  
 > 
 > **Buildspec**  
-> `빌드 사양`: `buildspec 파일 사용` 을 선택 후 프로젝트 루트에 buildspec.yml 생성하여 관리한다.  
+> `빌드 사양`: `buildspec 파일 사용` 을 선택 후 프로젝트 루트에 buildspec.yml 생성하여 관리한다.   
+>
+> `build`: 프로젝트 빌드에 관한 정보를 담는다.  
+> `build.on-failure`: 빌드 중 오류가 발생하여 빌드가 실패한 경우 해야할 작업을 기술한다.(ABORT, CONTINUE 중 택 1)  
+> `build.commands`: 빌드 작업 시 실행할 명령어들의 목록
+>
+> `post_build`: 빌드가 성공적으로 완료되면 이후 실행할 프로세스에 대한 정보를 담는다.    
+> `post_build.on-failure`: 포스트 빌드 중 오류가 발생하여 포스트 빌드가 실패한 경우 해야할 작업을 기술한다.(ABORT, CONTINUE 중 택 1)  
+> `post_build.commands`: 포스트 빌드 작업 시 실행할 명령어들의 목록
+>
+> `artifacts`: 빌드 산출물(artifact)에 대한 정보  
+> `files`: S3 에 올릴 파일 목록  
+> `discard-paths`: 산출물이 존재하는 경로를 버리고 파일 자체들만 S3 에 위치시킬 경우 yes, 디렉터리 경로를 유지해서 S3 에 넣을 경우 no
 > ```yaml
 > version: 0.2
 > phases:
 >   build:
->     commands:
->       - echo Build Starting on `date`
->       - chmod +x ./gradlew
->       - ./gradlew bootJar
+>       on-failure: ABORT
+>       commands:
+>           - echo Build Starting on `date`
+>           - java -version
+>           - chmod +x ./gradlew
+>           - ./gradlew bootJar -Pprofile=dev -x test -x asciidoctor
 >   post_build:
->     commands:
->       - echo $(basename ./build/libs/*.jar)
->       - pwd
+>       on-failure: ABORT
+>       commands:
+>           - echo $(basename ./build/libs/*.jar)
+>           - echo $(basename ./build/scripts/*.sh)
+>           - echo $(basename ./build/resources/main/*.yml)
+>           - pwd
 > artifacts:
 >   files:
->     - build/libs/*.jar
+>       - build/libs/*.jar
+>       - build/scripts/*.sh
+>       - build/resources/main/application-dev.yml
 >   discard-paths: yes
 > ```
 
