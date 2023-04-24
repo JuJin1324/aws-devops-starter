@@ -81,6 +81,43 @@
 > `./gradlew bootJar -x test -x asciidoctor` 를 통해서 모든 테스트 및 asciidoctor(Spring Rest Docs) 에 관련된 
 > task 를 모두 빼고 빌드를 실행하도록 설정하였다.  
 
+### aws cli
+> **start-build**  
+> AWS CodeBuild 프로젝트의 빌드를 새로 실행한다.  
+> ```shell
+> aws codebuild start-build --project-name <프로젝트 이름>
+> ```
+> 
+> **batch-get-builds**  
+> AWS CodeBuild 프로젝트의 진행 상태를 조회한다. watch 명령어와 같이 사용하는게 효과적이다. 
+> Bash shell 스크립트 파일에 start-build 와 함께 작성한다.
+> ```shell
+> # 원형
+> watch -d aws codebuild batch-get-builds --ids <프로젝트 빌드 ID>
+> 
+> # deploy-dev.sh
+> buildId=`aws codebuild start-build --project-name <프로젝트 이름> | jq '.build.id' | sed 's/\"//g'`
+> watch -d aws codebuild batch-get-builds --ids $buildId
+> ```
+>
+> **list-builds**  
+> `--sort-order=DESCENDING` 을 통해서 최근에 빌드한 프로젝트가 가장 상위에 오도록 정렬하여 가져올 수 있다.  
+> `| jq '.ids'` 를 통해서 빌드 ID 만 콘솔에 표시한다.  
+> ```shell
+> aws codebuild list-builds --sort-order=DESCENDING | jq '.ids'
+> ```
+> 
+> list-builds 를 응용하여 projectName 으로 설정한 프로젝트 중 가장 최근에 빌드된 빌드 ID 를 찾아서
+> S3 의 경로를 지정해 artifact 를 다운받는다.  
+> 다운받은 artifact 에 start-aws-c3-starter.sh 스크립트 파일을 이용해서 artifact 를 실행한다.
+> (물론 빌드 시 스크립트 파일이 artifact 에 포함되도록 개발자가 개발하는 빌드 툴에서 직접 설정해야한다.)  
+> ```shell
+> projectName='aws-c3-starter'
+> buildId=`aws codebuild list-builds --sort-order=DESCENDING | jq '.ids' | grep "$projectName" -m 1 | sed "s/$projectName://" | sed 's/\"//g' | sed 's/,//g' | sed 's/ //g'`
+> aws s3 cp s3://starter.codebuild/dev/$buildId/$projectName/ . --recursive
+> chmod +x start-$projectName.sh
+> ```
+
 ### 비용
 > 2023-04-13 기준   
 > general1.small(2 vCPU, 3GB): 0.005 USD  
