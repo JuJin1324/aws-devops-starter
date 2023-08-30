@@ -45,10 +45,24 @@
 > 수행 가능한 시스템으로 구성되며, 이런 자동화 도구는 DevOps 의 기술적 구성 요소의 핵심이다.  
 > 4. 장애 발생 시 인프라의 빠른 배포: DevOps 기반의 인프라 환경은 문제 발생 시 기존 인프라를 빠르게 재배포가 가능한 환경으로 제공한다.
 
-
-
 ### 참조사이트
 > [DevOps란 무엇입니까?](https://aws.amazon.com/ko/devops/what-is-devops/)
+
+---
+
+## IaC(Infrastructure as Code) 도구
+### 개요
+> IaC 도구에 관한 내용 중 명확히 이해해야 할 것은 Configuration Orchestration Tool 과 Configuration Management Tool 의 차이다.  
+> `Terraform` 과 `AWS CloudFormation` 과 같은 Orchestration Tool 은 서버 및 기타 인프라의 구축을 자동화하도록 설계되었다.  
+> `Chef`, `Puppet` 과 같은 Management Tool 은 이미 프로비저닝된 이 인프라의 소프트웨어와 시스템을 구성하고 관리하는 데 도움이 된다.  
+
+### Terraform
+> 오픈소스 기반의 `Configuration Orchestration Tool` 로 클라우드/온프레미스에 구애받지 않고 사용할 수 있는 인프라 프로비저닝 툴이다. 
+
+### AWS CloudFormation
+> `Configuration Orchestration Tool` 로 JSON/YAML 을 사용하여 템플릿을 생성할 수 있다.
+
+
 
 ---
 
