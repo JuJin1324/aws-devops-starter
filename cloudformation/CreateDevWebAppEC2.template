@@ -1,0 +1,76 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Make a dev EC2 for web application'
+
+Parameters:
+    DevVpc:
+        Type: String
+        Description: Dev VPC's ID
+    WebAppAMI:
+        Type: String
+        Default: ami-04a7c24c015ef1e4c
+        Description: Default is Amazon Linux
+    InstanceTypeParameter:
+        Type: String
+        Default: t3.small
+        Description: Default is t3.small
+    Key:
+        Type: String
+        Description: The keypair used to access the instance
+    PublicSubnet:
+        Type: String
+        Description: Public subnet's ID
+
+Resources:
+    InstanceSecurityGroup:
+        Type: AWS::EC2::SecurityGroup
+        Properties:
+            GroupName: "Dev Web Application Target Group"
+            GroupDescription: "Dev Web Application Target Group"
+            VpcId: !Ref DevVpc
+            SecurityGroupIngress:
+                -   IpProtocol: tcp
+                    FromPort: '22'
+                    ToPort: '22'
+                    CidrIp: 0.0.0.0/0
+                -   IpProtocol: tcp
+                    FromPort: '8080'
+                    ToPort: '8080'
+                    CidrIp: 0.0.0.0/0
+            SecurityGroupEgress:
+                -   IpProtocol: -1
+                    CidrIp: 0.0.0.0/0
+    WebAppEC2Instance:
+        Type: AWS::EC2::Instance
+        Properties:
+            ImageId: !Ref WebAppAMI
+            InstanceType:
+                Ref: InstanceTypeParameter
+            KeyName: Key
+            SubnetId: !Ref PublicSubnet
+            SecurityGroupIds:
+                -   Ref: InstanceSecurityGroup
+            BlockDeviceMappings:
+                -   DeviceName: /dev/xvda
+                    Ebs:
+                        VolumeType: gp3
+                        VolumeSize: 32
+                        DeleteOnTermination: true
+            Tags:
+                -   Key: Name
+                    Value: Dev Web Application
+                -   Key: Environment
+                    Value: Dev
+                -   Key: Application
+                    Value: Web Application
+                -   Key: OS
+                    Value: Amazon Linux
+                -   Key: LifeTime
+                    Value: Transient
+
+Outputs:
+    PublicIp:
+        Value:
+            Fn::GetAtt:
+                - WebAppEC2Instance
+                - PublicDnsName
+        Description: Server's Public DNS Name

@@ -1,0 +1,102 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Make a VPC for dev'
+
+Resources:
+    DevVPC:
+        Type: AWS::EC2::VPC
+        Properties:
+            CidrBlock: 172.1.0.0/16
+            EnableDnsHostnames: true
+            Tags:
+                -   Key: "Name"
+                    Value: "Dev VPC"
+                -   Key: "Environment"
+                    Value: "Dev"
+
+    InternetGateway:
+        Type: AWS::EC2::InternetGateway
+        Properties:
+            Tags:
+                -   Key: "Name"
+                    Value: "Dev IGW"
+                -   Key: "Environment"
+                    Value: "dev"
+
+    AttachGateway:
+        Type: AWS::EC2::VPCGatewayAttachment
+        Properties:
+            VpcId: !Ref DevVPC
+            InternetGatewayId: !Ref InternetGateway
+
+    PublicSubnet1:
+        Type: AWS::EC2::Subnet
+        Properties:
+            VpcId: !Ref DevVPC
+            CidrBlock: 172.1.0.0/24
+            AvailabilityZone: 'ap-northeast-2a'
+            Tags:
+                -   Key: "Name"
+                    Value: "Dev Public Subnet 2a"
+                -   Key: "Environment"
+                    Value: "dev"
+
+    PrivateSubnet1:
+        Type: AWS::EC2::Subnet
+        Properties:
+            VpcId: !Ref DevVPC
+            CidrBlock: 172.1.1.0/24
+            AvailabilityZone: 'ap-northeast-2c'
+            Tags:
+                -   Key: "Name"
+                    Value: "Dev Private Subnet 2c"
+                -   Key: "Environment"
+                    Value: "Dev"
+
+    PublicRouteTable:
+        Type: AWS::EC2::RouteTable
+        Properties:
+            VpcId: !Ref DevVPC
+            Tags:
+                -   Key: "Name"
+                    Value: "Dev Public RouteTable"
+                -   Key: "Environment"
+                    Value: "Dev"
+
+    PublicRoute:
+        Type: AWS::EC2::Route
+        Properties:
+            RouteTableId: !Ref PublicRouteTable
+            DestinationCidrBlock: 0.0.0.0/0
+            GatewayId: !Ref InternetGateway
+
+    PublicSubnetRouteTableAssociation1:
+        Type: AWS::EC2::SubnetRouteTableAssociation
+        Properties:
+            SubnetId: !Ref PublicSubnet1
+            RouteTableId: !Ref PublicRouteTable
+
+    PrivateRouteTable:
+        Type: AWS::EC2::RouteTable
+        Properties:
+            VpcId: !Ref DevVPC
+            Tags:
+                -   Key: "Name"
+                    Value: "Dev Private RouteTable"
+                -   Key: "Environment"
+                    Value: "Dev"
+
+    PrivateSubnetRouteTableAssociation1:
+        Type: AWS::EC2::SubnetRouteTableAssociation
+        Properties:
+            SubnetId: !Ref PrivateSubnet1
+            RouteTableId: !Ref PrivateRouteTable
+
+Outputs:
+    VPC:
+        Description: Dev VPC ID
+        Value: !Ref DevVPC
+    AZ1:
+        Description: Availability Zone 1
+        Value: !GetAtt
+            - PublicSubnet1
+            - AvailabilityZone

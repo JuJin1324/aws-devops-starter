@@ -62,7 +62,195 @@
 ### AWS CloudFormation
 > `Configuration Orchestration Tool` 로 JSON/YAML 을 사용하여 템플릿을 생성할 수 있다.
 
-
+### AWS CloudFormation Template
+> **CreateDevVPC.template**  
+> 설명: CloudFormation 을 통한 Dev 용도의 VPC 생성
+> ```yaml
+> > AWSTemplateFormatVersion: '2010-09-09'
+> Description: 'Make a VPC for dev'
+> 
+> Resources:
+>     DevVPC:
+>         Type: AWS::EC2::VPC
+>         Properties:
+>             CidrBlock: 172.1.0.0/16
+>             EnableDnsHostnames: true
+>             Tags:
+>                 -   Key: "Name"
+>                     Value: "vpc-dev"
+>                 -   Key: "Environment"
+>                     Value: "dev"
+> 
+>     InternetGateway:
+>         Type: AWS::EC2::InternetGateway
+>         Properties:
+>             Tags:
+>                 -   Key: "Name"
+>                     Value: "igw-dev"
+>                 -   Key: "Environment"
+>                     Value: "dev"
+> 
+>     AttachGateway:
+>         Type: AWS::EC2::VPCGatewayAttachment
+>         Properties:
+>             VpcId: !Ref DevVPC
+>             InternetGatewayId: !Ref InternetGateway
+> 
+>     PublicSubnet1:
+>         Type: AWS::EC2::Subnet
+>         Properties:
+>             VpcId: !Ref DevVPC
+>             CidrBlock: 172.1.0.0/24
+>             AvailabilityZone: 'ap-northeast-2a'
+>             Tags:
+>                 -   Key: "Name"
+>                     Value: "public-subnet-2a-dev"
+>                 -   Key: "Environment"
+>                     Value: "dev"
+> 
+>     PrivateSubnet1:
+>         Type: AWS::EC2::Subnet
+>         Properties:
+>             VpcId: !Ref DevVPC
+>             CidrBlock: 172.1.1.0/24
+>             AvailabilityZone: 'ap-northeast-2c'
+>             Tags:
+>                 -   Key: "Name"
+>                     Value: "private-subnet-2c-dev"
+>                 -   Key: "Environment"
+>                     Value: "dev"
+> 
+>     PublicRouteTable:
+>         Type: AWS::EC2::RouteTable
+>         Properties:
+>             VpcId: !Ref DevVPC
+>             Tags:
+>                 -   Key: "Name"
+>                     Value: "public-route-table-dev"
+>                 -   Key: "Environment"
+>                     Value: "dev"
+> 
+>     PublicRoute:
+>         Type: AWS::EC2::Route
+>         Properties:
+>             RouteTableId: !Ref PublicRouteTable
+>             DestinationCidrBlock: 0.0.0.0/0
+>             GatewayId: !Ref InternetGateway
+> 
+>     PublicSubnetRouteTableAssociation1:
+>         Type: AWS::EC2::SubnetRouteTableAssociation
+>         Properties:
+>             SubnetId: !Ref PublicSubnet1
+>             RouteTableId: !Ref PublicRouteTable
+> 
+>     PrivateRouteTable:
+>         Type: AWS::EC2::RouteTable
+>         Properties:
+>             VpcId: !Ref DevVPC
+>             Tags:
+>                 -   Key: "Name"
+>                     Value: "private-route-table-dev"
+>                 -   Key: "Environment"
+>                     Value: "dev"
+> 
+>     PrivateSubnetRouteTableAssociation1:
+>         Type: AWS::EC2::SubnetRouteTableAssociation
+>         Properties:
+>             SubnetId: !Ref PrivateSubnet1
+>             RouteTableId: !Ref PrivateRouteTable
+> 
+> Outputs:
+>     VPC:
+>         Description: Dev VPC ID
+>         Value: !Ref DevVPC
+>     AZ1:
+>         Description: Availability Zone 1
+>     Value: !GetAtt
+>         - PublicSubnet1
+>         - AvailabilityZone
+> ```
+> 
+> **CreateDevWebAppEC2Instance.template**  
+> dev 용도의 WebApplication 을 구동하는 EC2 인스턴스 생성 
+> ```yaml
+> AWSTemplateFormatVersion: '2010-09-09'
+> Description: 'Make a dev EC2 for web application'
+> 
+> Parameters:
+>     DevVpc:
+>         Type: String
+>         Description: Dev VPC's ID
+>     WebAppAMI:
+>         Type: String
+>         Default: ami-04a7c24c015ef1e4c
+>         Description: Default is Amazon Linux
+>     InstanceTypeParameter:
+>         Type: String
+>         Default: t3.small
+>         Description: Default is t3.small
+>     Key:
+>         Type: String
+>         Description: The keypair used to access the instance
+>     PublicSubnet:
+>         Type: String
+>         Description: Public subnet's ID
+> 
+> Resources:
+>     InstanceSecurityGroup:
+>         Type: AWS::EC2::SecurityGroup
+>         Properties:
+>             GroupName: "Dev Web Application Target Group"
+>             GroupDescription: "Dev Web Application Target Group"
+>             VpcId: !Ref DevVpc
+>             SecurityGroupIngress:
+>                 -   IpProtocol: tcp
+>                     FromPort: '22'
+>                     ToPort: '22'
+>                     CidrIp: 0.0.0.0/0
+>                 -   IpProtocol: tcp
+>                     FromPort: '8080'
+>                     ToPort: '8080'
+>                     CidrIp: 0.0.0.0/0
+>             SecurityGroupEgress:
+>                 -   IpProtocol: -1
+>                     CidrIp: 0.0.0.0/0
+>     WebAppEC2Instance:
+>         Type: AWS::EC2::Instance
+>         Properties:
+>         ImageId: !Ref WebAppAMI
+>         InstanceType:
+>             Ref: InstanceTypeParameter
+>         KeyName: Key
+>         SubnetId: !Ref PublicSubnet
+>         SecurityGroupIds:
+>             -   Ref: InstanceSecurityGroup
+>         BlockDeviceMappings:
+>             -   DeviceName: /dev/xvda
+>         Ebs:
+>             VolumeType: gp3
+>             VolumeSize: 32
+>             DeleteOnTermination: true
+>         Tags:
+>             -   Key: Name
+>                 Value: Dev Web Application
+>             -   Key: Environment
+>                 Value: Dev
+>             -   Key: Application
+>                 Value: Web Application
+>             -   Key: OS
+>                 Value: Amazon Linux
+>             -   Key: LifeTime
+>                 Value: Transient
+>     
+> Outputs:
+>     PublicIp:
+>         Value:
+>             Fn::GetAtt:
+>                 - WebAppEC2Instance
+>                 - PublicDnsName
+>         Description: Server's Public DNS Name
+> 
+> ```
 
 ---
 
