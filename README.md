@@ -77,16 +77,16 @@
 >             EnableDnsHostnames: true
 >             Tags:
 >                 -   Key: "Name"
->                     Value: "vpc-dev"
+>                     Value: "Dev VPC"
 >                 -   Key: "Environment"
->                     Value: "dev"
+>                     Value: "Dev"
 > 
 >     InternetGateway:
 >         Type: AWS::EC2::InternetGateway
 >         Properties:
 >             Tags:
 >                 -   Key: "Name"
->                     Value: "igw-dev"
+>                     Value: "Dev IGW"
 >                 -   Key: "Environment"
 >                     Value: "dev"
 > 
@@ -104,9 +104,9 @@
 >             AvailabilityZone: 'ap-northeast-2a'
 >             Tags:
 >                 -   Key: "Name"
->                     Value: "public-subnet-2a-dev"
+>                     Value: "Dev Public Subnet 2a"
 >                 -   Key: "Environment"
->                     Value: "dev"
+>                     Value: "Dev"
 > 
 >     PrivateSubnet1:
 >         Type: AWS::EC2::Subnet
@@ -116,9 +116,9 @@
 >             AvailabilityZone: 'ap-northeast-2c'
 >             Tags:
 >                 -   Key: "Name"
->                     Value: "private-subnet-2c-dev"
+>                     Value: "Dev Private Subnet 2c"
 >                 -   Key: "Environment"
->                     Value: "dev"
+>                     Value: "Dev"
 > 
 >     PublicRouteTable:
 >         Type: AWS::EC2::RouteTable
@@ -126,9 +126,9 @@
 >             VpcId: !Ref DevVPC
 >             Tags:
 >                 -   Key: "Name"
->                     Value: "public-route-table-dev"
+>                     Value: "Dev Public RouteTable"
 >                 -   Key: "Environment"
->                     Value: "dev"
+>                     Value: "Dev"
 > 
 >     PublicRoute:
 >         Type: AWS::EC2::Route
@@ -149,9 +149,9 @@
 >             VpcId: !Ref DevVPC
 >             Tags:
 >                 -   Key: "Name"
->                     Value: "private-route-table-dev"
+>                     Value: "Dev Private RouteTable"
 >                 -   Key: "Environment"
->                     Value: "dev"
+>                     Value: "Dev"
 > 
 >     PrivateSubnetRouteTableAssociation1:
 >         Type: AWS::EC2::SubnetRouteTableAssociation
@@ -199,8 +199,8 @@
 >     InstanceSecurityGroup:
 >         Type: AWS::EC2::SecurityGroup
 >         Properties:
->             GroupName: "Dev Web Application Target Group"
->             GroupDescription: "Dev Web Application Target Group"
+>             GroupName: "Dev Web Application SecurityGroup"
+>             GroupDescription: "Dev Web Application SecurityGroup"
 >             VpcId: !Ref DevVpc
 >             SecurityGroupIngress:
 >                 -   IpProtocol: tcp

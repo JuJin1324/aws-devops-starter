@@ -24,8 +24,8 @@ Resources:
     InstanceSecurityGroup:
         Type: AWS::EC2::SecurityGroup
         Properties:
-            GroupName: "Dev Web Application Target Group"
-            GroupDescription: "Dev Web Application Target Group"
+            GroupName: "Dev Web Application SecurityGroup"
+            GroupDescription: "Dev Web Application SecurityGroup"
             VpcId: !Ref DevVpc
             SecurityGroupIngress:
                 -   IpProtocol: tcp
