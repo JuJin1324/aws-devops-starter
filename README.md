@@ -462,6 +462,115 @@
 > 배포 그룹에서 최소 healthy 인스턴스 수를 계산할 때 stop 된 인스턴스는 failed 로 인식된다.  
 > 너무 많은 인스턴스를 stop 시켜서 최소 healthy 인스턴스 수보다 적어지면 배포가 실패로 종료될 수 있다.  
 
+### appspec.yml
+> ```yaml
+> version: 0.0
+> os: linux
+> files:
+>     -   source: /
+>         destination: /home/ec2-user/build/my-project
+> permissions:
+>     -   object: /
+>         pattern: "**"
+>         owner: ec2-user
+>         group: ec2-user
+> 
+> hooks:
+>     ApplicationStop:
+>         -   location: ./stop.sh
+>             timeout: 60
+>             runas: ec2-user
+>     BeforeInstall:
+>         -   location: ./delete_old.sh
+>             timeout: 60
+>             runas: ec2-user
+>     AfterInstall:
+>         -   location: ./move_jar_scripts.sh
+>             timeout: 60
+>             runas: ec2-user
+>     ApplicationStart:
+>         -   location: ./start.sh
+>             timeout: 60
+>             runas: ec2-user
+> ```
+>
+> **stop.sh**  
+> ```shell
+> #!/bin/bash
+> 
+> # 프로젝트 경로에서 jar 파일의 이름을 찾아서 프로세스 ID 검색한다.
+> PROJECT_PATH=/home/ec2-user/my-project
+> JAR_NAME=$(find $PROJECT_PATH -maxdepth 1 -name '*.jar' -type f -exec basename {} \;)
+> CURRENT_PID=$(pgrep -f $JAR_NAME)
+> 
+> # 프로세스 ID 가 있으면 종료시킨다.
+> if [ -n "$CURRENT_PID" ]; then
+> kill -15 $CURRENT_PID
+> sleep 5
+> fi
+> ```  
+> 
+> **delete_old.sh**  
+> ```shell
+> #!/bin/bash
+> 
+> # 빌드 경로가 없으면 만든다.
+> BUILD_PATH=/home/ec2-user/build
+> if [[ ! -d $BUILD_PATH ]]; then
+> mkdir $BUILD_PATH
+> fi
+> 
+> # my-project 의 빌드 경로가 있으면 지운 후 다시 만든다.
+> MY_PROJECT_BUILD_PATH=$BUILD_PATH/my-project
+> if [[ -d $MY_PROJECT_BUILD_PATH ]]; then
+> rm -r $MY_PROJECT_BUILD_PATH
+> fi
+> mkdir $MY_PROJECT_BUILD_PATH
+> ```
+>
+> **move_jar_scripts.sh**  
+> ```shell
+> #!/bin/bash
+> 
+> # 프로젝트 경로 디렉터리가 없으면 만든다.
+> PROJECT_PATH=/home/ec2-user/my-project
+> if [[ ! -d $PROJECT_PATH ]]; then
+> mkdir $PROJECT_PATH
+> fi
+> 
+> # 백업 경로 디렉터리가 있으면 삭제 후 다시 만든다.
+> BACKUP_PATH=$PROJECT_PATH/backup
+> if [[ -d $BACKUP_PATH ]]; then
+> rm -r $BACKUP_PATH
+> fi
+> mkdir $BACKUP_PATH
+> 
+> # 프로젝트 경로에 bash 파일이 있으면 백업 경로로 이동한다.
+> if [[ -n $(find $PROJECT_PATH -type f -name "*.sh") ]]; then
+> mv $PROJECT_PATH/*.sh $BACKUP_PATH/
+> fi
+> # 프로젝트 경로에 jar 파일이 있으면 백업 경로로 이동한다.
+> if [[ -n $(find $PROJECT_PATH -type f -name "*.jar") ]]; then
+> mv $PROJECT_PATH/*.jar $BACKUP_PATH/
+> fi
+> 
+> # 빌드 경로에 있는 jar 파일을 프로젝트 경로로 복사한다.
+> # 빌드 경로에 있는 bash 파일을 프로젝트 경로로 복사한다.
+> BUILD_PATH=/home/ec2-user/build/my-project
+> cp $BUILD_PATH/*.jar $PROJECT_PATH/
+> cp $BUILD_PATH/*.sh $PROJECT_PATH/
+> ```
+> 
+> **start.sh**  
+> ```shell
+> #!/bin/bash
+> 
+> # 프로젝트 경로에서 jar 파일 명을 찾아서 실행시킨다.
+> PROJECT_PATH=/home/ec2-user/my-project
+> JAR_FILE=$(ls PROJECT_PATH/*.jar)
+> nohup java -jar -Dspring.profiles.active=prod $JAR_FILE 1>/dev/null 2>&1 &
+> ```
+
 ### 비용
 > 2023-04-19 기준   
 > AWS CodeDeploy 를 통해 Amazon EC2, AWS Lambda 또는 Amazon ECS에 코드를 배포하는 데는 추가 비용이 부과되지 않습니다.  
