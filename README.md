@@ -571,6 +571,19 @@
 > nohup java -jar -Dspring.profiles.active=prod $JAR_FILE 1>/dev/null 2>&1 &
 > ```
 
+### 배포 이벤트가 무한 루프 돌 때 처리
+> 배포 이벤트가 무한 루프를 돌 때 해당 CodeDeploy Agent 가 정상적으로 실행되고 있는지 확인해야 한다.  
+> 해당 CodeDeploy Agent 가 실행되고 있는 EC2 인스턴스에 들어가서 상태 확인 후 재시작한다.  
+> ```shell
+> # 상태 확인
+> sudo systemctl status codedeploy-agent.service
+> 
+> # 재시작
+> sudo systemctl stop codedeploy-agent.service
+> sudo systemctl start codedeploy-agent.service
+> ```
+> 만약 stop 시에도 종료되지 않는 경우에는 `ps -ef | grep codedeploy` 를 사용해서 PID 를 알아내 `sudo kill -9 <PID>` 를 통해서 직접 킬한다.  
+
 ### 비용
 > 2023-04-19 기준   
 > AWS CodeDeploy 를 통해 Amazon EC2, AWS Lambda 또는 Amazon ECS에 코드를 배포하는 데는 추가 비용이 부과되지 않습니다.  
