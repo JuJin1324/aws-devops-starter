@@ -584,6 +584,9 @@
 > ```
 > 만약 stop 시에도 종료되지 않는 경우에는 `ps -ef | grep codedeploy` 를 사용해서 PID 를 알아내 `sudo kill -9 <PID>` 를 통해서 직접 킬한다.  
 
+### BlockTraffic 에서 무한 루프 돌 때 처리
+> 대상 그룹에서 설정한 포트와 대상 지정한 포트가 동일한지 확인해야한다. 대상 그룹에서 설정한 포트와 대상의 포트가 다르면 BlockTraffic 이 정상 동작하지 않는다.
+
 ### 비용
 > 2023-04-19 기준   
 > AWS CodeDeploy 를 통해 Amazon EC2, AWS Lambda 또는 Amazon ECS에 코드를 배포하는 데는 추가 비용이 부과되지 않습니다.  
